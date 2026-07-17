@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Review Draft"
+  short_description: "Draft precise, postable GitHub PR reviews"
+  default_prompt: "Use $pr-review-draft to review a pull request and show me the exact postable JSON review payload."
