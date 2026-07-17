@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bash Defensive Patterns"
+  short_description: "Write safer production Bash"
+  default_prompt: "Use $bash-defensive-patterns to write or harden a Bash script with strict mode, safe argument handling, cleanup traps, and defensive file operations."
