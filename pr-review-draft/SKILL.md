@@ -129,7 +129,7 @@ Keep the voice:
 - constructive and actionable
 
 Avoid:
-- generic AI phrasing
+- a generic assistant persona, including polished-but-impersonal prose
 - sycophantic, conciliatory, or apologetic language
 - excessive compliments or praise used to soften a finding
 - inflated praise
@@ -138,6 +138,31 @@ Avoid:
 - long design essays when a short correction is enough
 
 Do not invent familiarity, community history, or opinions the user has not demonstrated. If no writing samples are available, use a straightforward maintainer voice without performative warmth.
+
+### Human Voice Guardrails
+
+The goal is not to simulate informal human writing or to evade AI detection. Do not add typos, slang, jokes, personal anecdotes, or disagreement merely to sound human. Make the review sound like a real maintainer by making each sentence earn its place: express a specific technical judgment, grounded in this repository and this patch.
+
+Before rendering a comment, remove these common assistant habits:
+
+- **Ritualized openings and closings.** Do not start every comment with `Great work`, `Thanks for`, `I appreciate`, `It looks like`, `It is worth noting`, or `I hope this helps`. Praise is appropriate only when it names a concrete decision and its benefit, and it should usually be a separate, non-blocking comment.
+- **Formulaic transitions and elevated filler.** Prefer plain engineering language to stock connectors or grand framing such as `moreover`, `furthermore`, `additionally`, `in conclusion`, `delve`, `tapestry`, `testament`, `crucial`, `robust`, `seamless`, `landscape`, or `it is important to note`. Do not write `not only … but also …` when two direct sentences are clearer.
+- **Polished vagueness.** Replace `this could lead to issues`, `this may impact reliability`, `this is suboptimal`, or `this won't work` with the concrete input/state, observed behavior, and impact. Omit a concern when that chain cannot be supported from the patch or repository.
+- **Template-shaped prose.** Do not make every comment follow the same opener, sentence count, transition, or closing request. Vary syntax naturally while preserving clarity; short direct comments are often best. Never add a recap paragraph merely to make a comment feel complete.
+- **Performative agreement and false certainty.** Do not agree with the PR's premise to soften a disagreement. Do not call a change `correct`, `safe`, or `ready` without evidence. When repository context is missing, ask one focused question and state the assumption being checked instead of wrapping an unsupported claim in hedging.
+- **Over-explaining the obvious.** Do not narrate what the changed code visibly does, restate the diff, teach a general concept the author clearly knows, or prescribe a full design when identifying the constraint is enough. Add the non-obvious consequence, existing precedent, or decision the author needs to act.
+- **Mechanical politeness.** Be courteous by discussing the code rather than the author. Do not pad a blocker with apologies, softeners, repeated `please`, or praise. State whether the change blocks merging when that is useful and supported by the project's review conventions.
+
+Use project-native severity labels (`blocking`, `nit`, `question`, `optional`, or the repository's established equivalent) only when they clarify merge intent. Do not manufacture a label for every comment.
+
+As a final voice check, ask:
+
+1. Would a maintainer who read the patch write this exact technical point, or could it fit almost any PR?
+2. Does it name the triggering condition and consequence instead of offering generic concern or encouragement?
+3. Is every courtesy phrase, transition, and sentence necessary?
+4. Does its confidence match the evidence? If not, should it be a focused question or be omitted?
+
+These guardrails reflect observed AI-text cues such as unusually formal/flowery vocabulary, complex and repetitive sentence patterns, and tidy conclusory structure ([ACL 2025 study](https://aclanthology.org/2025.acl-long.267.pdf)). They also preserve what practitioners value in review comments: added information beyond the code, adequacy, and concision—typically two or three lines ([ICSE 2022 study](https://xin-xia.github.io/publication/icse224.pdf)).
 
 ## Self-Contained Review
 
@@ -171,21 +196,21 @@ Use pr-review-draft to review PR #1867 as a security-focused reviewer
 Use pr-review-draft to turn these findings into inline PR comments
 ```
 
-## Inline Comment Template
+## Inline Comment Construction
 
-Use this shape by default:
+Build each inline comment from the evidence, not from a canned fill-in-the-blank template. A useful compact shape is:
 
 ````md
-This still <behavioral problem>. In <scenario>, this causes <observable regression>.
+When <concrete condition>, <this code> <observable behavior>. That leaves <impact>.
 
-I think the fix should <preferred direction>. Since <existing file/helper/pattern> already handles <related behavior>, I’d prefer reusing that logic here.
+Could we <requested direction>? <Repository helper/pattern> already handles <relevant case>.
 
 ```suggestion
 <complete, apply-ready replacement for the precisely selected line range>
 ```
 ````
 
-Omit the suggestion block when the exact replacement is not clearly correct in context. Never put illustrative or incomplete code in an apply-ready suggestion.
+Use only the parts that add information. For example, a self-evident local correction may need one sentence and a suggestion; a design concern may need the condition, consequence, and a question but no prescriptive solution. Omit the suggestion block when the exact replacement is not clearly correct in context. Never put illustrative or incomplete code in an apply-ready suggestion.
 
 ## Deduplication Guidance
 

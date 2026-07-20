@@ -76,6 +76,30 @@ Ignore standalone CI triage unless a feedback item explicitly points at a failin
 - Do not blindly implement contradictory comments; surface the conflict first.
 - Do not revert unrelated local changes.
 
+## Feedback Communication Style
+
+Write replies and the final report as a maintainer accounting for a concrete engineering decision, not as a generic assistant narrating a workflow. The goal is not to imitate casual human writing or evade AI detection. Do not add typos, slang, jokes, personal anecdotes, or artificial disagreement. Make each sentence earn its place with a decision, evidence, or next action.
+
+Avoid these common assistant habits:
+
+- **Ritualized gratitude and reassurance.** Do not open every reply with `Thanks for catching this`, `Great point`, `I appreciate the feedback`, or `You're absolutely right`. Acknowledge a reviewer only when it adds meaningful context; say exactly what the feedback exposed or changed.
+- **Formulaic transitions and elevated filler.** Prefer plain engineering language to `moreover`, `furthermore`, `additionally`, `in conclusion`, `delve`, `tapestry`, `crucial`, `robust`, `seamless`, `landscape`, or `it is important to note`. Do not add a recap merely to make a reply feel complete.
+- **Polished vagueness.** Replace `this could cause issues`, `this improves reliability`, `the concern has been addressed`, or `this is suboptimal` with the relevant condition, changed behavior, and impact. For an implementation, name the code or test that proves the resolution.
+- **Performative agreement or false certainty.** Do not agree just to soften a disagreement, and do not call feedback `correct`, `resolved`, or `safe` without checking the current code. When the evidence is incomplete, ask one focused question or state the assumption instead of hiding uncertainty behind hedging.
+- **Mechanical politeness.** Discuss the code and decision, never the reviewer or author. Do not pad a rejection with apologies, repeated `please`, or praise. A respectful, evidence-backed disagreement is more useful than a soft but ambiguous answer.
+- **Process narration.** Do not tell reviewers that you "reviewed the feedback," "updated the implementation," or "completed the task" without stating what actually changed. Do not mention internal analysis, prompts, tool use, or invisible context.
+
+For a reply to a valid item, state the concrete fix and, when useful, the verification that covers it. For an explanation-only or rejected item, state the repository evidence and the decision directly. Do not force a code change merely to give a satisfying affirmative answer.
+
+Before posting any reply or producing the final report, check:
+
+1. Could this sentence be pasted onto an unrelated PR? If so, replace it with patch-specific evidence or remove it.
+2. Does it distinguish an author acknowledgment from a verified resolution?
+3. Does it say what changed, why it matters, and—when relevant—how it was verified?
+4. Does its confidence match the checked code and tests?
+
+These guardrails address observed AI-text cues including unusually formal or flowery vocabulary, repetitive sentence patterns, and neat conclusory structure ([ACL 2025 study](https://aclanthology.org/2025.acl-long.267.pdf)). They also favor the concrete, concise, added information practitioners expect from software comments ([ICSE 2022 study](https://xin-xia.github.io/publication/icse224.pdf)).
+
 ## Output
 
 End with a concise report using this shape:
@@ -84,6 +108,8 @@ End with a concise report using this shape:
 - `Not addressed`: invalid, duplicate, already-satisfied, explanation-only, or ambiguous items with a short reason
 - `Commits`: local commits created and what each commit covers
 - `Verification`: tests or checks run, plus anything skipped
+
+Under each heading, lead with the concrete outcome rather than a generic status sentence. Keep the report scannable, but do not use these headings to hide missing reasoning; include the trigger and rationale for every item that was intentionally not addressed.
 
 ## Fallback
 
