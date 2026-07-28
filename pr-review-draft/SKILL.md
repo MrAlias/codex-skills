@@ -84,9 +84,9 @@ Use explicit style guidance and available examples of the user's own review comm
 Also inspect the schema or documentation for the posting tool selected for this review. The active tool schema is authoritative when it differs from the REST examples in the reference.
 
 5. Make the top-level review body an overall engineering judgment, not a review inventory.
-State a clear merge posture. In one or two sentences, synthesize the most important cross-cutting concern and explain why it affects merge readiness without repeating inline comments. Do not count findings, list severity totals, or narrate what the reviewer found. Do not report CI status as bookkeeping unless it materially changes the overall assessment.
-Prefer: `The approach is promising, but the SDK takeover and correlation regressions should block merging.`
-Reject: `I found two P1 correctness issues and one P2 data-loss issue that need to be addressed before this is ready.`
+In one or two sentences, synthesize the most important cross-cutting concerns without repeating inline comments. Keep the merge posture clear from the review action and body together. Avoid a generic declaration that issues must be resolved before merge when the findings and review context already establish that; retain explicit blocking language when merge intent would otherwise be ambiguous. Do not count findings or list severity totals. Do not report CI status as bookkeeping unless it materially changes the overall assessment.
+Prefer: `I found a few gaps in the live-check coverage, along with an enum migration issue that appears to be keeping the suite red.`
+Reject: `The live-check plumbing still permits telemetry loss to escape validation. These issues need to be resolved before merge.`
 
 6. Select the GitHub review action deliberately; read [Review action selection](#review-action-selection) before constructing a draft.
 
@@ -170,7 +170,7 @@ Keep the voice:
 - confident
 - concise
 - critical where needed
-- constructive and actionable
+- collegial, constructive, and actionable
 
 Avoid:
 - a generic assistant persona, including polished-but-impersonal prose
@@ -182,6 +182,16 @@ Avoid:
 - long design essays when a short correction is enough
 
 Do not invent familiarity, community history, or opinions the user has not demonstrated. If no writing samples are available, use a straightforward maintainer voice without performative warmth.
+
+Frame findings as shared engineering problems, not indictments. Lead with a neutral observation and its concrete consequence. When several fixes could work, prefer a collaborative request such as `Could we…?` over a stacked sequence of imperatives. Avoid prosecutorial phrasing and unnecessary statements that an issue `must be resolved before merge` when the finding and review context already make that clear.
+
+Calibrate confidence to the evidence. Use `appears`, `may`, or `can` only when uncertainty is real; do not hedge established behavior. Do not mechanically turn every comment into a question, add pleasantries, or soften genuine blockers. Retain explicit blocking language whenever merge intent would otherwise be ambiguous.
+
+Before:
+> This baseline is captured after the tests. Capture it before tests start and treat scrape failures as fatal.
+
+After:
+> This baseline is captured only after the tests, so earlier failures are already included and may escape the delta check. Could we capture it before tests start? I also think a scrape failure should make the report untrustworthy.
 
 ### Human Voice Guardrails
 
@@ -195,7 +205,7 @@ Before rendering a comment, remove these common assistant habits:
 - **Template-shaped prose.** Do not make every comment follow the same opener, sentence count, transition, or closing request. Vary syntax naturally while preserving clarity; short direct comments are often best. Never add a recap paragraph merely to make a comment feel complete.
 - **Performative agreement and false certainty.** Do not agree with the PR's premise to soften a disagreement. Do not call a change `correct`, `safe`, or `ready` without evidence. When repository context is missing, ask one focused question and state the assumption being checked instead of wrapping an unsupported claim in hedging.
 - **Over-explaining the obvious.** Do not narrate what the changed code visibly does, restate the diff, teach a general concept the author clearly knows, or prescribe a full design when identifying the constraint is enough. Add the non-obvious consequence, existing precedent, or decision the author needs to act.
-- **Mechanical politeness.** Be courteous by discussing the code rather than the author. Do not pad a blocker with apologies, softeners, repeated `please`, or praise. State whether the change blocks merging when that is useful and supported by the project's review conventions.
+- **Mechanical politeness.** Let collegiality come from discussing the code as a shared problem. Do not pad comments with apologies, repeated `please`, praise, or formulaic questions; keep blockers unmistakable when the review context does not already establish them.
 
 Use project-native severity labels (`blocking`, `nit`, `question`, `optional`, or the repository's established equivalent) only when they clarify merge intent. Do not manufacture a label for every comment.
 
