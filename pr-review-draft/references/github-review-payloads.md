@@ -2,6 +2,17 @@
 
 Read this reference before drafting or posting a GitHub review.
 
+## Review Action
+
+`COMMENT` is the default review event. It can contain feedback that must be
+addressed before merge; it is not a non-blocking severity level. Use
+`REQUEST_CHANGES` only to establish a new formal blocking review decision, or
+when the user explicitly directs it. Before selecting that event, inspect the
+reviewer's existing reviews and current code: when an earlier request for
+changes still has unresolved blockers, submit follow-up feedback as `COMMENT`.
+Do not create another request-changes review just because the new finding is
+important or the PR remains unready.
+
 ## Authoritative Documentation
 
 Open and read the current GitHub documentation relevant to the selected transport and suggestion blocks before constructing the payload. Do not rely on remembered syntax when current official documentation is available.
@@ -28,7 +39,7 @@ This is an illustrative REST request body, not a template to copy without checki
 {
   "commit_id": "0123456789abcdef0123456789abcdef01234567",
   "body": "There is one correctness issue to address before this is ready.",
-  "event": "REQUEST_CHANGES",
+  "event": "COMMENT",
   "comments": [
     {
       "path": "pkg/cache/cache.go",

@@ -88,17 +88,19 @@ State a clear merge posture. In one or two sentences, synthesize the most import
 Prefer: `The approach is promising, but the SDK takeover and correlation regressions should block merging.`
 Reject: `I found two P1 correctness issues and one P2 data-loss issue that need to be addressed before this is ready.`
 
-6. Put specific feedback inline on the relevant lines.
+6. Select the GitHub review action deliberately; read [Review action selection](#review-action-selection) before constructing a draft.
+
+7. Put specific feedback inline on the relevant lines.
 Each inline comment should:
 - identify the behavioral risk or regression
 - explain the scenario where it matters
 - point to existing repository logic or patterns when reuse is preferable
 - include an apply-ready GitHub suggestion block when a concrete, local correction is clear and useful
 
-7. Verify every inline location against the refreshed patch.
+8. Verify every inline location against the refreshed patch.
 Confirm the repository-relative path, first and last line, diff side, suggestion replacement span, and latest head SHA. Never guess an anchor or reuse obsolete line numbers.
 
-8. Show or post the review.
+9. Show or post the review.
 For a draft, follow the exact JSON contract below. If the user asks to post, submit one review with all inline comments attached. If the head SHA or any payload field changes after the user approves a draft, show the replacement JSON instead of silently posting a different payload.
 
 ## Exact Draft Contract
@@ -115,6 +117,48 @@ When the user asks to see the draft:
 If repository or PR identifiers are arguments to the selected tool, include them in the JSON. If they are path parameters outside a REST request body, identify the endpoint immediately before the JSON block, then show the exact request body.
 
 Before showing the draft, parse the JSON with a real JSON parser and verify it against the selected tool schema.
+
+## Review Action Selection
+
+`COMMENT` and `REQUEST_CHANGES` are GitHub workflow actions, not severity
+labels. Keep the action decision separate from whether an inline finding is
+important or must be addressed before merge.
+
+In the OpenTelemetry repositories this user maintains, a `COMMENT` review is
+normally used for actionable feedback—including correctness defects, failed CI,
+and items that must be resolved before merge—when it adds to an existing merge
+block or records another review pass. A prior `REQUEST_CHANGES` review remains
+the formal merge posture until its blockers are resolved and the reviewer
+changes that posture. Do not use another `REQUEST_CHANGES` merely because the
+new comment is important, the PR is still not ready, or the top-level body says
+an item must be addressed.
+
+Default to `COMMENT`. Select `REQUEST_CHANGES` only when all of the following
+are true:
+
+- the user explicitly requests it, or the evidence supports establishing a new
+  formal, merge-blocking review decision;
+- the finding is a concrete unresolved blocker for the current head, rather
+  than an optional improvement, a question, an uncertain concern, or a request
+  for a broader alternative;
+- no earlier `REQUEST_CHANGES` review by this reviewer still covers unresolved
+  blockers on the PR; and
+- submitting a new formal block is appropriate to the project's review
+  lifecycle, rather than simply adding feedback to the existing review state.
+
+Before choosing the action, inspect this reviewer's prior reviews, their states,
+author replies, and the current head. Treat a prior request as still standing
+when its concrete blockers have not been resolved in the current code. Its age,
+a newer commit, or additional findings do not by themselves justify another
+request-changes event. Use `COMMENT` for follow-up findings while that request
+stands. If the state cannot be determined, use `COMMENT` unless the user
+explicitly directs `REQUEST_CHANGES`.
+
+The top-level body must remain honest about merge readiness regardless of the
+chosen action. A `COMMENT` may say that a concrete issue needs resolution
+before merge; it must not pretend the feedback is optional. Conversely, do not
+claim a new formal block in prose when the review action is `COMMENT`; describe
+the code and merge condition directly.
 
 ## Comment Style
 
