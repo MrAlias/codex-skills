@@ -1,6 +1,6 @@
 ---
 name: pr-review-draft
-description: Review a GitHub pull request from source artifacts or turn existing findings into a polished review. Use when Codex should inspect a PR diff against its base branch, check CI status and prior GitHub feedback, and produce a Senior Staff Engineer-style review with a concise summary plus specific actionable findings by severity. Also use when Codex should draft or post a GitHub review from completed findings. For drafts, emit the exact valid JSON payload intended for the posting tool, with verified diff line ranges, correctly scoped GitHub suggestion blocks, the user's maintainer voice, and self-contained comments.
+description: Review a GitHub pull request from source artifacts or turn existing findings into a polished review. Use for initial or follow-up review passes, including when Codex should inspect a PR diff against its base branch, preserve continuity with prior feedback, converge on unresolved concerns, check CI status, and produce a Senior Staff Engineer-style review with a concise summary plus specific actionable findings by severity. Also use when Codex should draft or post a GitHub review from completed findings. For drafts, emit the exact valid JSON payload intended for the posting tool, with verified diff line ranges, correctly scoped GitHub suggestion blocks, the user's maintainer voice, and self-contained comments.
 ---
 
 # PR Review Draft
@@ -37,17 +37,16 @@ When the user asks for a review:
 1. Identify the target PR and base branch.
 Use the current branch if needed. Use the PR base branch by default.
 
-2. Inspect the checked-out diff against the base branch.
-Read the changed files and focus on behavior, not just style.
+2. Determine whether this is an initial or follow-up review.
+Treat it as a follow-up when this reviewer has already completed a substantive pass.
 
-3. Check GitHub context.
-Review:
-- CI status
-- prior review comments
-- issue comments
-- author replies
+3. Establish the review scope.
+- For an initial review, inspect the checked-out diff against the base branch.
+- For a follow-up, identify the head SHA from the reviewer's last substantive pass and inspect commits added since it. Read existing review threads, author replies, and resolution status. Build an internal ledger for each earlier concern: requested direction, author response, implementing commit, and whether the current code resolves it. Review the new commits first; expand into unchanged surrounding code only as needed to validate their semantic effects.
 
-4. Evaluate the areas the user requested.
+4. Check CI status and relevant review and issue discussion, including author replies.
+
+5. Evaluate the areas the user requested.
 Typical axes:
 - logic and correctness
 - architecture and maintainability
@@ -55,14 +54,14 @@ Typical axes:
 - test coverage
 - documentation and naming
 
-5. Produce findings first.
+6. Produce findings first.
 Order by severity. Each finding should explain:
 - what is wrong
 - when it breaks
 - why it matters
 
-6. Keep the summary brief.
-Summarize the change only after the findings, unless the user explicitly asked for a longer overview.
+7. Keep the summary brief.
+Summarize the change only after the findings, unless the user explicitly asked for a longer overview. Keep follow-up summaries especially brief.
 
 ## Draft Or Post Review Comments
 
@@ -71,11 +70,7 @@ When the user wants the findings turned into GitHub comments:
 1. Refresh the PR before drafting.
 Read the latest head SHA, current code, and current patch. Do not draft inline locations from a stale review dump or finding summary.
 
-2. Check prior PR discussion before calling findings new.
-Distinguish:
-- exact duplicate already posted
-- same theme raised earlier but different concrete failure mode
-- genuinely new finding
+2. Apply [Review continuity and convergence](#review-continuity-and-convergence) before calling a finding new.
 
 3. Match the user's review voice.
 Use explicit style guidance and available examples of the user's own review comments to learn phrasing, cadence, and project terminology. When access permits, identify the authenticated user's GitHub login and sample three to five recent, substantive reviews from the same repository or community. Prefer examples supplied in the current task, then same-repository reviews, then closely related repositories. Ignore bots, copied boilerplate, and unusually context-specific comments. Transfer style only; never transfer unrelated content or private context.
@@ -223,7 +218,7 @@ These guardrails reflect observed AI-text cues such as unusually formal/flowery 
 Make the submitted review understandable from the PR and repository alone:
 
 - State the concrete problem, triggering scenario, impact, and requested direction in the review itself.
-- Do not mention the drafting process, internal analysis, the user's prompt, private conversation, or invisible context.
+- Do not mention the drafting process, internal analysis or AI usage, the user's prompt, private conversation, or invisible context.
 - Avoid references such as `as we discussed`, `from the earlier review`, or `the issue I mentioned` unless the referenced text is part of the same visible GitHub thread and the comment still restates the necessary context.
 - Restate any essential repository or prior-discussion context instead of requiring the author to chase it.
 - Use links and citations as supporting evidence, not as a substitute for the explanation.
@@ -266,16 +261,26 @@ Could we <requested direction>? <Repository helper/pattern> already handles <rel
 
 Use only the parts that add information. For example, a self-evident local correction may need one sentence and a suggestion; a design concern may need the condition, consequence, and a question but no prescriptive solution. Omit the suggestion block when the exact replacement is not clearly correct in context. Never put illustrative or incomplete code in an apply-ready suggestion.
 
-## Deduplication Guidance
+## Review Continuity and Convergence
 
-When asked whether findings are new:
-- say "not new" only if the same concrete issue was already posted
-- say "same theme, new formulation" when earlier comments touched the area but did not state the same failure mode
-- say "new" when neither the exact bug nor the concrete failure mode appears in prior comments
+Before producing each follow-up finding, check the review ledger:
 
-When asked whether earlier comments were addressed:
-- separate "acknowledged by the author" from "actually resolved"
-- use both author replies and the current code state
+- Do not create a new comment for the same concrete failure already reported. If it remains unresolved, continue the existing thread when possible.
+- Treat a different failure mode introduced by the response to earlier feedback as new, but connect it to the underlying invariant instead of presenting it as unrelated.
+- If earlier guidance omitted or contradicted an important invariant, say so plainly and provide the corrected invariant rather than silently moving the goalposts.
+- Post a finding outside the latest delta only when the new changes caused or exposed it, or it is a clear high-severity blocker. Otherwise classify it as follow-up work.
+
+When several findings share a subsystem or lifecycle, consolidate them around the underlying invariant and acceptance criteria. Prefer one comment with representative tests over successive comments for isolated edge cases. Before requesting another change, ask internally:
+
+- Why is this surfacing now, and could it reasonably have been raised earlier?
+- Does it refine or conflict with previous guidance?
+- Can related failure modes be addressed together?
+
+Never suppress a genuine blocker because of review fatigue. Distinguish a current-PR blocker from reasonable follow-up work using impact, likelihood, regression status, and the PR's stated scope; a narrow, low-impact, or pre-existing edge case does not automatically block the PR.
+
+State blocker versus follow-up status when it prevents churn, and do not re-explain the full history unless the author needs it to act.
+
+When classifying findings, use `not new` only for the same concrete issue, `same theme, new formulation` for a different failure mode in an area discussed earlier, and `new` when neither appeared before. Separate author acknowledgement from resolution, using replies and current code to decide the latter.
 
 ## GitHub Tools
 
