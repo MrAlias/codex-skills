@@ -63,6 +63,9 @@ Order by severity. Each finding should explain:
 7. Keep the summary brief.
 Summarize the change only after the findings, unless the user explicitly asked for a longer overview. Keep follow-up summaries especially brief.
 
+8. Run the [Independent BS detector](#independent-bs-detector) on the complete
+candidate review, including findings, open questions, and summary.
+
 ## Draft Or Post Review Comments
 
 When the user wants the findings turned into GitHub comments:
@@ -95,8 +98,103 @@ Each inline comment should:
 8. Verify every inline location against the refreshed patch.
 Confirm the repository-relative path, first and last line, diff side, suggestion replacement span, and latest head SHA. Never guess an anchor or reuse obsolete line numbers.
 
-9. Show or post the review.
+9. Complete the [Exact draft contract](#exact-draft-contract), including JSON
+parsing and tool-schema validation, then run the
+[Independent BS detector](#independent-bs-detector) on the exact candidate
+payload, including its action, top-level body, inline comments, anchors, and
+suggestions.
+
+10. Show or post the review.
 For a draft, follow the exact JSON contract below. If the user asks to post, submit one review with all inline comments attached. If the head SHA or any payload field changes after the user approves a draft, show the replacement JSON instead of silently posting a different payload.
+
+## Independent BS Detector
+
+Treat the BS detector as a mandatory, adversarial evidence check, not a request
+for tone polishing or reflexive disagreement. Run it after every user-visible
+part of the candidate review is complete and immediately before showing,
+posting, or otherwise presenting that review as the result. The exact final
+candidate must receive `PASS`.
+
+Spawn one fresh independent agent that did not participate in the review. Use a
+no-history or isolated-context spawn so it cannot inherit the primary reviewer's
+conversation or rationale. Give it only the candidate output and an initial
+evidence packet:
+
+- the current PR diff and head SHA
+- the full current files or surrounding code cited by findings
+- relevant tests, CI evidence, and repository documentation
+- prior review threads and the review ledger for a follow-up
+- the exact draft payload when comments will be shown or posted
+
+Give the detector independent read-only access to the repository and PR so it
+can inspect callers, tests, documentation, discussion, and CI beyond the initial
+packet. Let it request missing artifacts. If access or evidence is insufficient
+to test a claim, require `UNVERIFIABLE`; do not let absence of contradictory
+evidence count as confirmation.
+
+Do not give the detector the primary reviewer's chain of thought, a defense of
+the findings, or instructions to agree. Ask it to try to falsify the candidate
+from the artifacts and return a compact verdict for every outgoing component:
+each finding, open question, summary, review action, top-level body, inline
+comment, anchor, suggestion, and payload identifier or field. Use:
+
+- `KEEP`: the claim, trigger, impact, severity, and requested direction are
+  supported
+- `REVISE`: a real issue is present, but the wording, confidence, severity,
+  scope, remedy, or anchor overstates the evidence
+- `DROP`: the claim is unsupported, incorrect, duplicate, stale, pre-existing
+  without current-PR relevance, or too speculative to post
+- `MISSING`: the supplied artifacts directly expose a material finding the
+  candidate omitted; reserve this for concrete correctness or merge-readiness
+  concerns, not optional expansion of scope
+- `UNVERIFIABLE`: the available evidence or access cannot establish whether the
+  component is sound
+
+Require the detector to cite an exact artifact locator and, for code claims,
+the relevant code path supporting each verdict. It must specifically check for:
+
+- a concrete, reachable triggering condition rather than a hypothetical with
+  no demonstrated path
+- an observable consequence that follows from the current code
+- contradictory guards, cleanup, validation, callers, tests, or platform
+  behavior that invalidate the claim
+- severity and merge posture proportional to impact, likelihood, regression
+  status, and PR scope
+- duplication or goalpost movement relative to prior review feedback
+- accurate current-head paths, lines, diff sides, replacement spans, and
+  apply-ready suggestions
+- wording that distinguishes fact from uncertainty and removes generic,
+  inflated, or performative concern
+- a top-level body and review action consistent with the validated findings and
+  existing review state
+
+Have the detector end with one overall verdict: `PASS` only when every outgoing
+component is `KEEP` and there are no `MISSING` or `UNVERIFIABLE` items;
+otherwise `FAIL`. The detector may recommend changes, but it must not edit
+files, post the review, or decide the final response.
+
+Adjudicate every non-`KEEP` verdict against the source artifacts. Revise or drop
+anything the primary reviewer cannot independently substantiate. Add a
+`MISSING` item only after independently validating it under the normal review
+scope and continuity rules. Whether the primary agrees or disagrees with a
+`FAIL`, revise the candidate or evidence packet and run a new fresh detector;
+the primary cannot waive the gate. Any change to outgoing content, payload
+fields, identifiers, or supporting evidence invalidates the prior verdict.
+
+Allow at most three detector attempts for one requested review. If the exact
+final candidate has not received `PASS` after the third attempt, do not show or
+post it. Report that independent validation did not converge, without exposing
+the candidate as review output. Do not expose the detector's internal report in
+the submitted GitHub review.
+
+For direct posting, re-read the PR head SHA immediately after `PASS` and before
+submission. If it changed, rebuild the candidate against the new head and
+restart the detector gate. Never post a review validated against a stale head.
+
+If an independent agent cannot be spawned or cannot inspect the necessary
+artifacts, do not show or post the candidate review and do not claim the gate
+passed. Tell the user that the independent validation is blocked and identify
+the missing capability or evidence.
 
 ## Exact Draft Contract
 
@@ -111,7 +209,9 @@ When the user asks to see the draft:
 
 If repository or PR identifiers are arguments to the selected tool, include them in the JSON. If they are path parameters outside a REST request body, identify the endpoint immediately before the JSON block, then show the exact request body.
 
-Before showing the draft, parse the JSON with a real JSON parser and verify it against the selected tool schema.
+Before invoking the BS detector, parse the JSON with a real JSON parser and
+verify it against the selected tool schema. Treat any later serialization or
+schema-driven change as a new candidate that requires another detector pass.
 
 ## Review Action Selection
 
