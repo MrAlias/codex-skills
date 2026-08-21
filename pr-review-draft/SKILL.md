@@ -22,7 +22,33 @@ When the user says something short like `Use pr-review-draft to review PR #1867`
 - check prior GitHub feedback
 - focus on correctness, architecture, security/performance, test coverage, and documentation/naming
 
-Treat `show me the draft`, `draft the review`, and similar requests after findings are concluded as requests for the exact postable JSON payload. A request for a draft is not authorization to post it.
+Treat `draft the review` as a request to create or revise the exact postable JSON
+payload. Treat `show me the draft` after a review was just completed as a
+request to display that review as the exact JSON payload, not as a request for
+another review pass. A request for a draft is not authorization to post it.
+
+### Show the existing draft
+
+When the user says `show me the draft` or equivalent after this skill just
+completed a review in the current task:
+
+- Reuse the completed review and its latest draft state. Do not refresh the PR,
+  revisit findings, sample more writing examples, or spawn a fresh independent
+  detector merely to display it.
+- If the exact JSON payload already exists, return it unchanged. Do not
+  reconstruct or reserialize it.
+- If the completed review has not yet been rendered as JSON, render its existing
+  action, body, comments, anchors, suggestions, and identifiers without adding,
+  removing, or substantively rewriting anything. Perform only the mechanical
+  JSON parsing and tool-schema checks required by the
+  [Exact draft contract](#exact-draft-contract).
+- Use the normal draft workflow when no completed review or draft exists in the
+  current task, or when the user asks to refresh, revise, recheck, or regenerate
+  it.
+
+Showing an existing draft does not authorize posting and does not waive the
+current-head checks required immediately before a later post. If those checks
+require any payload change, show the replacement JSON before posting.
 
 Default to reviewing the PR from source artifacts unless the user explicitly provides completed findings and asks you to reformat, deduplicate, or post them.
 
@@ -68,7 +94,10 @@ candidate review, including findings, open questions, and summary.
 
 ## Draft Or Post Review Comments
 
-When the user wants the findings turned into GitHub comments:
+Use this workflow when the user wants findings turned into new or revised
+GitHub comments, or wants comments posted. For `show me the draft` after a
+review was just completed, use [Show the existing draft](#show-the-existing-draft)
+instead.
 
 1. Refresh the PR before drafting.
 Read the latest head SHA, current code, and current patch. Do not draft inline locations from a stale review dump or finding summary.
@@ -109,11 +138,17 @@ For a draft, follow the exact JSON contract below. If the user asks to post, sub
 
 ## Independent BS Detector
 
-Treat the BS detector as a mandatory, adversarial evidence check, not a request
-for tone polishing or reflexive disagreement. Run it after every user-visible
-part of the candidate review is complete and immediately before showing,
-posting, or otherwise presenting that review as the result. The exact final
-candidate must receive `PASS`.
+Treat the BS detector as a mandatory, adversarial evidence check for every new
+or revised candidate, not a request for tone polishing or reflexive
+disagreement. Run it after every user-visible part of such a candidate is
+complete and immediately before first presenting or posting that candidate as
+the result. The exact final candidate must receive `PASS`.
+
+Do not run a fresh detector when the user only asks to show the review or draft
+that this skill just completed in the current task. Follow
+[Show the existing draft](#show-the-existing-draft). This exception permits
+displaying the existing result; it does not permit changing the candidate or
+posting against a stale head.
 
 Spawn one fresh independent agent that did not participate in the review. Use a
 no-history or isolated-context spawn so it cannot inherit the primary reviewer's
@@ -198,7 +233,7 @@ the missing capability or evidence.
 
 ## Exact Draft Contract
 
-When the user asks to see the draft:
+When the user asks to create or revise a draft:
 
 - Select the actual posting tool or endpoint first.
 - Return one fenced `json` block containing the exact argument object or request body that will be sent. Use the active tool's real field names and nesting; do not translate it into a generic review schema.
@@ -212,6 +247,10 @@ If repository or PR identifiers are arguments to the selected tool, include them
 Before invoking the BS detector, parse the JSON with a real JSON parser and
 verify it against the selected tool schema. Treat any later serialization or
 schema-driven change as a new candidate that requires another detector pass.
+
+When the user asks to show the draft that was just completed, follow
+[Show the existing draft](#show-the-existing-draft). Do not treat that display
+request itself as a reason to invoke the detector again.
 
 ## Review Action Selection
 
