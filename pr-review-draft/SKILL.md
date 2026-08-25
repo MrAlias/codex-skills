@@ -1,6 +1,6 @@
 ---
 name: pr-review-draft
-description: Review a GitHub pull request from source artifacts or turn existing findings into a polished review. Use for initial or follow-up review passes, including when Codex should inspect a PR diff against its base branch, preserve continuity with prior feedback, converge on unresolved concerns, check CI status, and produce a Senior Staff Engineer-style review with a concise summary plus specific actionable findings by severity. Also use when Codex should draft or post a GitHub review from completed findings. For drafts, emit the exact valid JSON payload intended for the posting tool, with verified diff line ranges, correctly scoped GitHub suggestion blocks, the user's maintainer voice, and self-contained comments.
+description: Review a GitHub pull request from source artifacts or turn existing findings into a polished review. Use for initial or follow-up review passes, including when Codex should inspect a PR diff against its base branch, preserve continuity with prior feedback, converge on unresolved concerns, check CI status, and produce a thorough, evidence-led Senior Staff Engineer-style review with a concise summary plus specific actionable findings by severity. Also use when Codex should draft or post a GitHub review from completed findings. For drafts, emit the exact valid JSON payload intended for the posting tool, with verified diff line ranges, correctly scoped GitHub suggestion blocks, the user's maintainer voice, and self-contained comments.
 ---
 
 # PR Review Draft
@@ -20,7 +20,24 @@ When the user says something short like `Use pr-review-draft to review PR #1867`
 - use a Senior Staff Engineer review voice
 - check CI status
 - check prior GitHub feedback
+- perform a thorough, proportionate review of the change and its relevant context
 - focus on correctness, architecture, security/performance, test coverage, and documentation/naming
+
+### Thoroughness is coverage, not criticism
+
+Produce a thorough review. Treat thoroughness as complete, proportionate
+examination of the PR, not as a target number of findings or a mandate to find
+fault. Understand the change's intent and invariants, inspect the full scoped
+diff and relevant surrounding code, trace affected callers and lifecycle paths,
+and check tests, CI, documentation, compatibility, and prior discussion where
+they bear on merge readiness.
+
+Report only concrete, evidence-backed findings that would help the author or
+maintainers. Do not invent edge cases, elevate optional preferences, split one
+issue into several comments, or add nits merely to make the review appear
+substantive. A thorough review may legitimately produce no actionable findings.
+When none survive validation, say so directly and briefly state what was
+examined plus any residual uncertainty or unverified checks.
 
 Treat `draft the review` as a request to create or revise the exact postable JSON
 payload. Treat `show me the draft` after a review was just completed as a
@@ -72,7 +89,7 @@ Treat it as a follow-up when this reviewer has already completed a substantive p
 
 4. Check CI status and relevant review and issue discussion, including author replies.
 
-5. Evaluate the areas the user requested.
+5. Evaluate the areas the user requested thoroughly and proportionately.
 Typical axes:
 - logic and correctness
 - architecture and maintainability
@@ -81,10 +98,14 @@ Typical axes:
 - documentation and naming
 
 6. Produce findings first.
-Order by severity. Each finding should explain:
+Do not impose a finding quota. Order any findings by severity. Each finding
+should explain:
 - what is wrong
 - when it breaks
 - why it matters
+
+If no actionable findings remain after validation, report that result rather
+than manufacturing criticism.
 
 7. Keep the summary brief.
 Summarize the change only after the findings, unless the user explicitly asked for a longer overview. Keep follow-up summaries especially brief.
@@ -184,6 +205,10 @@ comment, anchor, suggestion, and payload identifier or field. Use:
   concerns, not optional expansion of scope
 - `UNVERIFIABLE`: the available evidence or access cannot establish whether the
   component is sound
+
+A candidate with no findings can pass when the review scope was examined and
+the evidence exposes no material concern. Do not use `MISSING` merely because
+the candidate contains few or no criticisms; require a concrete omitted issue.
 
 Require the detector to cite an exact artifact locator and, for code claims,
 the relevant code path supporting each verdict. It must specifically check for:
@@ -366,7 +391,8 @@ Make the submitted review understandable from the PR and repository alone:
 
 For a source review, prefer this structure:
 
-1. Findings by severity.
+1. Findings by severity, or an explicit statement that no actionable findings
+   survived validation.
 2. Open questions or assumptions, if any.
 3. Short summary of the overall change.
 
