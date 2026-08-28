@@ -1,6 +1,6 @@
 ---
 name: pr-review-draft
-description: Review a GitHub pull request from source artifacts or turn existing findings into a polished review. Use for initial or follow-up review passes, including when Codex should inspect a PR diff against its base branch, preserve continuity with prior feedback, converge on unresolved concerns, check CI status, and produce a thorough, evidence-led Senior Staff Engineer-style review with a concise summary plus specific actionable findings by severity. Also use when Codex should draft or post a GitHub review from completed findings. For drafts, emit the exact valid JSON payload intended for the posting tool, with verified diff line ranges, correctly scoped GitHub suggestion blocks, the user's maintainer voice, and self-contained comments.
+description: Review a GitHub pull request from source artifacts or turn existing findings into a polished review. Use for initial or follow-up review passes, including when Codex should inspect a PR diff against its base branch, preserve continuity with prior feedback, converge on unresolved concerns, check CI status, and produce a thorough, evidence-led Senior Staff Engineer-style review with a concise summary plus specific actionable findings by severity. Also use when Codex should draft or post a GitHub review from completed findings. Always present the completed review as the exact valid JSON payload intended for the posting tool before posting, with verified diff line ranges, correctly scoped GitHub suggestion blocks, the user's maintainer voice, and self-contained comments.
 ---
 
 # PR Review Draft
@@ -22,6 +22,7 @@ When the user says something short like `Use pr-review-draft to review PR #1867`
 - check prior GitHub feedback
 - perform a thorough, proportionate review of the change and its relevant context
 - focus on correctness, architecture, security/performance, test coverage, and documentation/naming
+- finish by showing the exact JSON payload that would be sent to the selected posting tool
 
 ### Thoroughness is coverage, not criticism
 
@@ -39,10 +40,14 @@ substantive. A thorough review may legitimately produce no actionable findings.
 When none survive validation, say so directly and briefly state what was
 examined plus any residual uncertainty or unverified checks.
 
-Treat `draft the review` as a request to create or revise the exact postable JSON
-payload. Treat `show me the draft` after a review was just completed as a
+Always materialize a completed review as the exact postable JSON payload and
+show it before any posting step. Do this when the user asks for a review, a
+draft, revised comments, or posting; do not make the user follow up with `show
+me the draft`. Treat `show me the draft` after a review was just completed as a
 request to display that review as the exact JSON payload, not as a request for
-another review pass. A request for a draft is not authorization to post it.
+another review pass. Showing or creating a draft is not authorization to post
+it. Posting is always a separate, approval-gated step after the payload has
+been shown.
 
 ### Show the existing draft
 
@@ -97,7 +102,7 @@ Typical axes:
 - test coverage
 - documentation and naming
 
-6. Produce findings first.
+6. Produce findings internally first.
 Do not impose a finding quota. Order any findings by severity. Each finding
 should explain:
 - what is wrong
@@ -110,15 +115,16 @@ than manufacturing criticism.
 7. Keep the summary brief.
 Summarize the change only after the findings, unless the user explicitly asked for a longer overview. Keep follow-up summaries especially brief.
 
-8. Run the [Independent BS detector](#independent-bs-detector) on the complete
-candidate review, including findings, open questions, and summary.
+8. Continue through [Draft, Then Post Review Comments](#draft-then-post-review-comments)
+to render the complete review as an exact posting payload, validate it, and
+show it to the user.
 
-## Draft Or Post Review Comments
+## Draft, Then Post Review Comments
 
-Use this workflow when the user wants findings turned into new or revised
-GitHub comments, or wants comments posted. For `show me the draft` after a
-review was just completed, use [Show the existing draft](#show-the-existing-draft)
-instead.
+Use this workflow whenever a completed review reaches its output stage, or when
+the user wants findings turned into new or revised GitHub comments. For `show
+me the draft` after a review was just completed, use
+[Show the existing draft](#show-the-existing-draft) instead.
 
 1. Refresh the PR before drafting.
 Read the latest head SHA, current code, and current patch. Do not draft inline locations from a stale review dump or finding summary.
@@ -154,8 +160,17 @@ parsing and tool-schema validation, then run the
 payload, including its action, top-level body, inline comments, anchors, and
 suggestions.
 
-10. Show or post the review.
-For a draft, follow the exact JSON contract below. If the user asks to post, submit one review with all inline comments attached. If the head SHA or any payload field changes after the user approves a draft, show the replacement JSON instead of silently posting a different payload.
+10. Show the review and stop.
+Follow the exact JSON contract below. Do not submit a newly created or revised
+review in the same turn, even if the initial request asked to post it. Wait for
+the user to approve the displayed payload.
+
+11. Post only after approval.
+Re-read the PR head SHA and recheck the selected posting tool immediately before
+submission. If neither the head SHA nor any payload field has changed, submit
+one review using the displayed object unchanged, with all inline comments
+attached. If anything must change, show the replacement JSON and wait for fresh
+approval instead of silently posting a different payload.
 
 ## Independent BS Detector
 
@@ -247,9 +262,10 @@ post it. Report that independent validation did not converge, without exposing
 the candidate as review output. Do not expose the detector's internal report in
 the submitted GitHub review.
 
-For direct posting, re-read the PR head SHA immediately after `PASS` and before
-submission. If it changed, rebuild the candidate against the new head and
-restart the detector gate. Never post a review validated against a stale head.
+After the user approves the displayed payload, re-read the PR head SHA
+immediately before submission. If it changed, rebuild the candidate against the
+new head, restart the detector gate, show the replacement payload, and wait for
+fresh approval. Never post a review validated against a stale head.
 
 If an independent agent cannot be spawned or cannot inspect the necessary
 artifacts, do not show or post the candidate review and do not claim the gate
@@ -258,7 +274,7 @@ the missing capability or evidence.
 
 ## Exact Draft Contract
 
-When the user asks to create or revise a draft:
+Whenever a completed review is presented before posting:
 
 - Select the actual posting tool or endpoint first.
 - Return one fenced `json` block containing the exact argument object or request body that will be sent. Use the active tool's real field names and nesting; do not translate it into a generic review schema.
@@ -396,7 +412,10 @@ For a source review, prefer this structure:
 2. Open questions or assumptions, if any.
 3. Short summary of the overall change.
 
-For a requested draft, replace this human-readable structure with the exact JSON payload contract above. For posted review comments, keep the review body brief if the important detail is already inline.
+Use the human-readable structure only as an internal drafting aid. The
+user-visible result of every completed review is the exact JSON payload contract
+above. For posted review comments, keep the review body brief if the important
+detail is already inline.
 
 ## Invocation Patterns
 
