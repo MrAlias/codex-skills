@@ -295,9 +295,17 @@ request itself as a reason to invoke the detector again.
 
 ## Review Action Selection
 
-`COMMENT` and `REQUEST_CHANGES` are GitHub workflow actions, not severity
-labels. Keep the action decision separate from whether an inline finding is
-important or must be addressed before merge.
+`APPROVE`, `COMMENT`, and `REQUEST_CHANGES` are GitHub workflow actions, not
+severity labels. Keep the action decision separate from whether an inline
+finding is important or must be addressed before merge.
+
+When no actionable findings or unresolved review concerns remain for the
+current head, select `APPROVE`. An all-clear review is an approval, not a
+`COMMENT` review with a reassuring summary. Use `COMMENT` when the review
+contains non-blocking feedback or records a follow-up pass with actionable
+comments; do not use it solely to say that everything looks good. Check prior
+review state before approving, and treat any unresolved blocker as an
+actionable concern rather than an all-clear.
 
 In the OpenTelemetry repositories this user maintains, a `COMMENT` review is
 normally used for actionable feedback—including correctness defects, failed CI,
@@ -308,8 +316,7 @@ changes that posture. Do not use another `REQUEST_CHANGES` merely because the
 new comment is important, the PR is still not ready, or the top-level body says
 an item must be addressed.
 
-Default to `COMMENT`. Select `REQUEST_CHANGES` only when all of the following
-are true:
+Select `REQUEST_CHANGES` only when all of the following are true:
 
 - the user explicitly requests it, or the evidence supports establishing a new
   formal, merge-blocking review decision;
