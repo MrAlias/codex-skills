@@ -38,7 +38,7 @@ This is an illustrative REST request body, not a template to copy without checki
 ```json
 {
   "commit_id": "0123456789abcdef0123456789abcdef01234567",
-  "body": "There is one correctness issue to address before this is ready.",
+  "body": "The cache can hide a storage failure. Return the storage error before merge.",
   "event": "COMMENT",
   "comments": [
     {
@@ -47,7 +47,7 @@ This is an illustrative REST request body, not a template to copy without checki
       "start_side": "RIGHT",
       "line": 89,
       "side": "RIGHT",
-      "body": "This drops the storage error, so callers continue as if the cache entry was persisted. Please return the error here.\n\n```suggestion\nif err := cache.Store(ctx, value); err != nil {\n\treturn fmt.Errorf(\"store cache entry: %w\", err)\n}\n```"
+      "body": "The code drops the storage error, so callers assume the cache contains the entry. Return the error here.\n\n```suggestion\nif err := cache.Store(ctx, value); err != nil {\n\treturn fmt.Errorf(\"store cache entry: %w\", err)\n}\n```"
     }
   ]
 }

@@ -133,13 +133,14 @@ Read the latest head SHA, current code, and current patch. Do not draft inline l
 
 3. Match the user's review voice.
 Use explicit style guidance and available examples of the user's own review comments to learn phrasing, cadence, and project terminology. When access permits, identify the authenticated user's GitHub login and sample three to five recent, substantive reviews from the same repository or community. Prefer examples supplied in the current task, then same-repository reviews, then closely related repositories. Ignore bots, copied boilerplate, and unusually context-specific comments. Transfer style only; never transfer unrelated content or private context.
+Apply [Simplified review communication](#simplified-review-communication) to the prose. Preserve the user's terminology within its structural rules.
 
 4. Read [GitHub review payloads and suggestions](references/github-review-payloads.md) completely.
 Also inspect the schema or documentation for the posting tool selected for this review. The active tool schema is authoritative when it differs from the REST examples in the reference.
 
 5. Make the top-level review body an overall engineering judgment, not a review inventory.
 In one or two sentences, synthesize the most important cross-cutting concerns without repeating inline comments. Keep the merge posture clear from the review action and body together. Avoid a generic declaration that issues must be resolved before merge when the findings and review context already establish that; retain explicit blocking language when merge intent would otherwise be ambiguous. Do not count findings or list severity totals. Do not report CI status as bookkeeping unless it materially changes the overall assessment.
-Prefer: `I found a few gaps in the live-check coverage, along with an enum migration issue that appears to be keeping the suite red.`
+Prefer: `The live checks miss telemetry loss. The enum migration also appears to cause the test failures.`
 Reject: `The live-check plumbing still permits telemetry loss to escape validation. These issues need to be resolved before merge.`
 
 6. Select the GitHub review action deliberately; read [Review action selection](#review-action-selection) before constructing a draft.
@@ -154,7 +155,8 @@ Each inline comment should:
 8. Verify every inline location against the refreshed patch.
 Confirm the repository-relative path, first and last line, diff side, suggestion replacement span, and latest head SHA. Never guess an anchor or reuse obsolete line numbers.
 
-9. Complete the [Exact draft contract](#exact-draft-contract), including JSON
+9. Complete the internal [Communication self-check](#communication-self-check) before final serialization.
+Then complete the [Exact draft contract](#exact-draft-contract), including JSON
 parsing and tool-schema validation, then run the
 [Independent BS detector](#independent-bs-detector) on the exact candidate
 payload, including its action, top-level body, inline comments, anchors, and
@@ -346,6 +348,46 @@ the code and merge condition directly.
 
 Write as the user: a maintainer and respected member of the community reviewing a peer's contribution. Prefer the user's demonstrated phrasing and terminology over a generic house style.
 
+### Simplified Review Communication
+
+Use a simplified communication profile based on the user's 80% ASD-STE100 rules.
+Apply it to review titles, summaries, findings, questions, and requests, including prose inside JSON `body` strings.
+Treat 80% as a vocabulary allowance, not permission to relax the structural rules.
+Do not claim formal ASD-STE100 compliance without the standard and its approved vocabulary.
+
+- **Sentence length:** Limit instructions and requests to 20 words per sentence. Limit descriptions and questions to 25 words per sentence.
+- **Word meaning:** Use each prose word with one consistent meaning. Use `right` only for direction. Use `correct` for accuracy and `immediately` for time.
+- **Verb forms:** Use infinitives, imperatives for instructions, and present simple for descriptions. Do not use progressive forms or passive voice. An `-ing` technical noun, such as `logging`, is not a progressive verb.
+- **Noun clusters:** Use no more than three consecutive nouns. Add prepositions to separate longer noun chains.
+- **Word economy:** Use one consistent word for each action or object. Do not alternate synonyms for variety.
+- **Vocabulary:** Prefer familiar words. Limit exceptions to technical names, code syntax, and necessary domain terms. Preserve precise repository terminology and confidence that matches the evidence.
+
+Use modals such as `may` or `can` only when the evidence requires uncertainty or capability.
+Use the base verb after a modal. Do not use modals to obscure facts or avoid direct instructions.
+State prior events through current evidence when possible, such as `The earlier review identifies the same failure.`
+Preserve the distinction between prior events and current behavior. Do not change facts to satisfy the profile.
+
+Exclude code suggestions, code blocks, identifiers, paths, URLs, quotations from source artifacts, and JSON syntax from these prose rules.
+Preserve their exact content and required format. Apply the profile to the prose around them.
+Technical vocabulary exceptions do not exempt surrounding prose from sentence length, verb form, or noun cluster limits.
+
+### Communication Self-Check
+
+Complete this internal check before any new or revised review reaches the detector or the user.
+Check decoded prose in JSON strings, not escape sequences or code suggestions.
+
+1. Check every prose sentence against the applicable 20-word or 25-word limit.
+2. Check verb forms, active voice, and the limit of three consecutive nouns in every prose sentence.
+3. Check consistent word meanings and terminology. Limit vocabulary exceptions to technical names, code syntax, or necessary domain terms.
+4. Rewrite each violation. Preserve the trigger, consequence, severity, uncertainty, and requested action.
+5. Confirm that every prose sentence meets the structural rules. Keep this check internal.
+
+Complete these edits before final JSON serialization and independent validation.
+Follow the existing detector rules if any later edit changes the candidate.
+Preserve an existing draft unchanged when the user only asks to display it.
+
+### Maintainer Voice
+
 Keep the voice:
 - direct
 - specific
@@ -365,15 +407,15 @@ Avoid:
 
 Do not invent familiarity, community history, or opinions the user has not demonstrated. If no writing samples are available, use a straightforward maintainer voice without performative warmth.
 
-Frame findings as shared engineering problems, not indictments. Lead with a neutral observation and its concrete consequence. When several fixes could work, prefer a collaborative request such as `Could we…?` over a stacked sequence of imperatives. Avoid prosecutorial phrasing and unnecessary statements that an issue `must be resolved before merge` when the finding and review context already make that clear.
+Frame findings as shared engineering problems, not indictments. Lead with a neutral observation and its concrete consequence. Use one concise imperative for the requested direction. Leave room for alternative fixes when several approaches satisfy the same constraint. Avoid prosecutorial phrasing and unnecessary statements that an issue `must be resolved before merge` when the finding and review context already make that clear.
 
 Calibrate confidence to the evidence. Use `appears`, `may`, or `can` only when uncertainty is real; do not hedge established behavior. Do not mechanically turn every comment into a question, add pleasantries, or soften genuine blockers. Retain explicit blocking language whenever merge intent would otherwise be ambiguous.
 
-Before:
+Before (outside the profile):
 > This baseline is captured after the tests. Capture it before tests start and treat scrape failures as fatal.
 
 After:
-> This baseline is captured only after the tests, so earlier failures are already included and may escape the delta check. Could we capture it before tests start? I also think a scrape failure should make the report untrustworthy.
+> The script captures the baseline after the tests. The baseline includes earlier failures, so the delta check can miss them. Capture the baseline before the tests start. Treat a scrape failure as a report failure.
 
 ### Human Voice Guardrails
 
@@ -384,7 +426,7 @@ Before rendering a comment, remove these common assistant habits:
 - **Ritualized openings and closings.** Do not start every comment with `Great work`, `Thanks for`, `I appreciate`, `It looks like`, `It is worth noting`, or `I hope this helps`. Praise is appropriate only when it names a concrete decision and its benefit, and it should usually be a separate, non-blocking comment.
 - **Formulaic transitions and elevated filler.** Prefer plain engineering language to stock connectors or grand framing such as `moreover`, `furthermore`, `additionally`, `in conclusion`, `delve`, `tapestry`, `testament`, `crucial`, `robust`, `seamless`, `landscape`, or `it is important to note`. Do not write `not only … but also …` when two direct sentences are clearer.
 - **Polished vagueness.** Replace `this could lead to issues`, `this may impact reliability`, `this is suboptimal`, or `this won't work` with the concrete input/state, observed behavior, and impact. Omit a concern when that chain cannot be supported from the patch or repository.
-- **Template-shaped prose.** Do not make every comment follow the same opener, sentence count, transition, or closing request. Vary syntax naturally while preserving clarity; short direct comments are often best. Never add a recap paragraph merely to make a comment feel complete.
+- **Template-shaped prose.** Do not make every comment follow the same opener, sentence count, transition, or closing request. Vary syntax within the communication profile; short direct comments are often best. Never add a recap paragraph merely to make a comment feel complete.
 - **Performative agreement and false certainty.** Do not agree with the PR's premise to soften a disagreement. Do not call a change `correct`, `safe`, or `ready` without evidence. When repository context is missing, ask one focused question and state the assumption being checked instead of wrapping an unsupported claim in hedging.
 - **Over-explaining the obvious.** Do not narrate what the changed code visibly does, restate the diff, teach a general concept the author clearly knows, or prescribe a full design when identifying the constraint is enough. Add the non-obvious consequence, existing precedent, or decision the author needs to act.
 - **Mechanical politeness.** Let collegiality come from discussing the code as a shared problem. Do not pad comments with apologies, repeated `please`, praise, or formulaic questions; keep blockers unmistakable when the review context does not already establish them.
@@ -443,7 +485,7 @@ Build each inline comment from the evidence, not from a canned fill-in-the-blank
 ````md
 When <concrete condition>, <this code> <observable behavior>. That leaves <impact>.
 
-Could we <requested direction>? <Repository helper/pattern> already handles <relevant case>.
+Use <repository helper/pattern> to <requested direction>. It already handles <relevant case>.
 
 ```suggestion
 <complete, apply-ready replacement for the precisely selected line range>
