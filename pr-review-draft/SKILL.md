@@ -20,6 +20,7 @@ When the user says something short like `Use pr-review-draft to review PR #1867`
 - use a Senior Staff Engineer review voice
 - check CI status
 - check prior GitHub feedback
+- complete the five-question pre-review on initial source reviews before detailed hunk review
 - perform a thorough, proportionate review of the change and its relevant context
 - focus on correctness, architecture, security/performance, test coverage, and documentation/naming
 - finish by showing the exact JSON payload that would be sent to the selected posting tool
@@ -89,12 +90,27 @@ Use the current branch if needed. Use the PR base branch by default.
 Treat it as a follow-up when this reviewer has already completed a substantive pass.
 
 3. Establish the review scope.
-- For an initial review, inspect the checked-out diff against the base branch.
+- For an initial review, establish the base and head SHA and read the PR description, linked issue or design, and diff overview. Complete the pre-review below before detailed inspection of the checked-out diff against the base branch.
 - For a follow-up, identify the head SHA from the reviewer's last substantive pass and inspect commits added since it. Read existing review threads, author replies, and resolution status. Build an internal ledger for each earlier concern: requested direction, author response, implementing commit, and whether the current code resolves it. Review the new commits first; expand into unchanged surrounding code only as needed to validate their semantic effects.
 
 4. Check CI status and relevant review and issue discussion, including author replies.
 
-5. Evaluate the areas the user requested thoroughly and proportionately.
+5. Complete the initial pre-review when applicable.
+Read and apply [Initial review pre-review](references/initial-pre-review.md)
+completely on every initial source review. Answer all five questions before
+detailed hunk review: What is the problem? Is it worth solving? Is there a
+simpler way? Will the APIs and layers last? Is it good taste?
+If a fundamental premise is unclear or unsupported, validate that concern and
+lead with it before implementation feedback. Follow the reference's outcome
+rules instead of proceeding directly to code polish.
+For follow-ups, apply the existing review ledger and convergence rules; revisit
+these questions only when new changes or evidence materially alter the premise
+or design. Skip this stage when only formatting completed findings or showing
+an existing draft.
+
+6. Evaluate the areas the user requested thoroughly and proportionately.
+When the pre-review defers detailed implementation review, keep this pass
+within the stated scope and carry the unresolved premise into the draft.
 Typical axes:
 - logic and correctness
 - architecture and maintainability
@@ -102,7 +118,7 @@ Typical axes:
 - test coverage
 - documentation and naming
 
-6. Produce findings internally first.
+7. Produce findings internally first.
 Do not impose a finding quota. Order any findings by severity. Each finding
 should explain:
 - what is wrong
@@ -112,10 +128,12 @@ should explain:
 If no actionable findings remain after validation, report that result rather
 than manufacturing criticism.
 
-7. Keep the summary brief.
+8. Keep the summary brief.
 Summarize the change only after the findings, unless the user explicitly asked for a longer overview. Keep follow-up summaries especially brief.
+Lead with any validated concern about the premise or design in the top-level
+body. Do not bury it under inline implementation comments or a change summary.
 
-8. Continue through [Draft, Then Post Review Comments](#draft-then-post-review-comments)
+9. Continue through [Draft, Then Post Review Comments](#draft-then-post-review-comments)
 to render the complete review as an exact posting payload, validate it, and
 show it to the user.
 
